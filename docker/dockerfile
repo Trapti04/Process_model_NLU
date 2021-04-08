@@ -2,4 +2,5 @@ FROM python:3
 ADD test.py /
 RUN pip install nltk
 RUN pip install stanza
+RUN python -m nltk downloader punkt
 CMD [ "python", "./test.py" ]
