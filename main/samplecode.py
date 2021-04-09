@@ -10,12 +10,11 @@ nlp = stanza.Pipeline('en')
 doc = nlp(sample_text[0])
 for sentence in doc.sentences:
     print(sentence.ents) # print entities
-for sentence in doc.sentences:
-    print(sentence.dependencies) # print sentences
-print(*[f'word: {word.text}\tupos: {word.upos}\txpos: {word.xpos}\tfeats: {word.feats if word.feats else "_"}' for sent in doc.sentences for word in sent.words], sep='\n')
-print(*[f'id: {word.id}\tword: {word.text}\thead id: {word.head}\thead: {sent.words[word.head-1].text if word.head > 0 else "root"}\tdeprel: {word.deprel}' for sent in doc.sentences for word in sent.words], sep='\n')
+#for sentence in doc.sentences:
+    ##print(*[f'word: {word.text}\tupos: {word.upos}\txpos: {word.xpos}\tfeats: {word.feats if word.feats else "_"}' for sent in doc.sentences for word in sent.words], sep='\n')
+#print(*[f'id: {word.id}\tword: {word.text}\thead id: {word.head}\thead: {sent.words[word.head-1].text if word.head > 0 else "root"}\tdeprel: {word.deprel}' for sent in doc.sentences for word in sent.words], sep='\n')
 sample2 ='n She is the woman who introduced me'
 doc2 = nlp(sample2)
-for sentence in doc2.sentences:
-    print(sentence.dependencies)
+#for sentence in doc2.sentences:
+#    print(sentence.dependencies)
  
