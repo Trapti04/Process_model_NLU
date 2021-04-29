@@ -25,33 +25,64 @@ def isPassive(sent):
     return isPassive           
         
 def extract_elements(sent):
-    actors = []
+    actors = {}
     rawActions= []
     b_passive = isPassive(sent) 
     actors = determineActors(b_passive,sent)
     #rawActions = determineActions(b_passive,sent)     
     return b_passive, actors  
 
+
+"""
+Determine Actors is the key method to resolve actors, resources which helps in identification of entitites
+"""
 def determineActors(b_passive,sent):
-    results=[]
+    results={}
     #print(*[f'id: {word.id}\tword: {word.text}\thead id: {word.head}\thead: {sent.words[word.head-1].text if word.head > 0 else "root"}\tdeprel: {word.deprel}' for sent in doc.sentences for word in sent.words], sep='\n')
     for word in sent.words:
         if not b_passive:
             if word.deprel == 'nsubj':
-                results.append(word.text) 
+                results[word.id] = word.text
         else:
             if word.deprel == 'nsubj:pass':
-                results.append(word.text)
-    
+                results[word.id] = word.text
+    """
     for word in sent.words:
-        if word.head > 0 and word.deprel == 'compound':
+        # if one compound has as its head another compound ithen they need to be carry forward togethr
+        if word.head > 0 and word.deprel == 'compound' :
             for id, result in enumerate(results):
                 if sent.words[word.head-1].text == result:
                     results[id] = word.text + ' ' + result
-                    
-    
+        if word.head > 0 and word.deprel == 'flat':
+            for id, result in enumerate(results):
+                newResult = result
+                if sent.words[word.head - 1].text == result:
+                    rnewResult = newRresult + ' ' + word.text
+                    print(results[id])
+            results[id] = newResult
+    """
+    #print(results)
+    for k, v in results.items(): 
+        new_Subject =''
+        condition_no = 0
+        for word in sent.words:
+            if word.id <= k and word.head > 0 and word.deprel == 'compound': # condition for compounds between nsubj & det
+                new_Subject = new_Subject + word.text + ' '
+                condition_no = 1
+            elif word.head > 0 and word.head == k and word.deprel == 'flat': # condition for following flat relations after nsubj
+                new_Subject = new_Subject + ' ' + word.text 
+                condition_no = 2
+        
+        if condition_no == 1:
+            results[k]= new_Subject + v 
+        elif condition_no == 2:
+            results[k] = v + new_Subject
+
     return results
 
+"""
+qualifyActors is the method in wich we can add logic to further disambiguiate the type of Actors/ resouces
+"""
 def qualifyActors(actors):
     resultsDict = {}
     entities =[]
@@ -60,7 +91,7 @@ def qualifyActors(actors):
                  entities.append(ent)
 
     #print(*[f'entity: {ent.text}\ttype: {ent.type}' for sent in doc.sentences for ent in sent.ents], sep='\n')
-    for actor in actors:
+    for k,actor in actors.items():
         resultsDict[actor]= 'Resource'
         for ent in entities:
             if ent.text in actor:
@@ -79,7 +110,7 @@ def determineActions(b_passive,sent):
 if __name__ == "__main__":
     doc,s_count = test()
     for i,sent in enumerate(doc.sentences):
-        print (i+1, extract_elements(sent))
+       # print (i+1, extract_elements(sent))
         _,actors = extract_elements(sent)
         print(qualifyActors(actors))
     #print(*[f'entity: {ent.text}\ttype: {ent.type}' for sent in doc.sentences for ent in sent.ents], sep='\n')
