@@ -35,11 +35,11 @@ def findDependency(sent, dep_name):
         
 def extract_elements(sent):
     actors = {}
-    rawActions= []
+    rawActions= {}
     b_passive = isPassive(sent) 
     actors = determineActors(b_passive,sent)
-    #rawActions = determineActions(b_passive,sent)     
-    return b_passive, actors  
+    rawActions = determineActions(b_passive,sent)     
+    return b_passive, actors , rawActions 
 
 
 """
@@ -124,7 +124,6 @@ def determineActions(b_passive,sent):
                 if word.deprel == 'nsubj:pass' and word.head > 0:
                     results[word.head] = sent.words[word.head-1].text
                 
-    print(results)
     return results
 
 def determineActions_dummy(b_passive,sent):
@@ -145,9 +144,9 @@ if __name__ == "__main__":
     doc,s_count = test()
     for i,sent in enumerate(doc.sentences):
        # print (i+1, extract_elements(sent))
-        isPass,actors = extract_elements(sent)
-        #print(qualifyActors(actors))
-        determineActions(isPass,sent)
-        #print(rawActions)
+        isPass,actors,actions = extract_elements(sent)
+        print(f'Sentence no:{i}:: Qualified Actors are: {qualifyActors(actors)} , Actions found are: {actions}')
+        #rawActions = determineActions(isPass,sent)
+        #print(actions)
     #print(*[f'entity: {ent.text}\ttype: {ent.type}' for sent in doc.sentences for ent in sent.ents], sep='\n')
     
