@@ -22,7 +22,16 @@ def isPassive(sent):
         if word.feats:
             if passive_indicator in word.feats:
                 isPassive = True
-    return isPassive           
+    return isPassive 
+
+def findDependency(sent, dep_name):
+    dep_list = sent.dependencies
+    status = False
+    for dep in dep_list:
+        if dep[1] == dep_name :
+            status = True
+    return status
+
         
 def extract_elements(sent):
     actors = {}
@@ -46,21 +55,7 @@ def determineActors(b_passive,sent):
         else:
             if word.deprel == 'nsubj:pass':
                 results[word.id] = word.text
-    """
-    for word in sent.words:
-        # if one compound has as its head another compound ithen they need to be carry forward togethr
-        if word.head > 0 and word.deprel == 'compound' :
-            for id, result in enumerate(results):
-                if sent.words[word.head-1].text == result:
-                    results[id] = word.text + ' ' + result
-        if word.head > 0 and word.deprel == 'flat':
-            for id, result in enumerate(results):
-                newResult = result
-                if sent.words[word.head - 1].text == result:
-                    rnewResult = newRresult + ' ' + word.text
-                    print(results[id])
-            results[id] = newResult
-    """
+    
     #print(results)
     for k, v in results.items(): 
         new_Subject =''
@@ -103,15 +98,56 @@ def qualifyActors(actors):
 
 
 def determineActions(b_passive,sent):
-    result=[]
-    return result
+    results={}
+    if not b_passive: # for active sentences
+        if findDependency(sent,'nsubj'): 
+            for word in sent.words: 
+                if word.deprel == 'nsubj' :  
+                    mainPredicate = sent.words[word.head-1].text
+                    idPredicate = word.head
+                    results[idPredicate] = mainPredicate
+            if findDependency(sent,'cop'):
+                for word in sent.words: 
+                    if word.deprel == 'cop' :  
+                        if sent.words[word.head-1].text == mainPredicate:
+                            results.pop(idPredicate)
+                            results[word.id] = word.text
+            
+        elif findDependency(sent,'dobj'):
+            for word in sent.words:
+                if word.deprel == 'dobj' and word.head > 0:
+                    results[word.head] = sent.words[word.head-1].text
 
+    else: # for passive sentences
+        if findDependency(sent,'nsubj:pass'):
+            for word in sent.words:
+                if word.deprel == 'nsubj:pass' and word.head > 0:
+                    results[word.head] = sent.words[word.head-1].text
+                
+    print(results)
+    return results
+
+def determineActions_dummy(b_passive,sent):
+    results={}
+    dep_list = sent.dependencies
+    
+    for dep in dep_list:
+        if dep[1] == 'nsubj' :
+            results[dep[0].id] = dep[0].text
+                
+            #print(dep[0])
+            #print(dep[0])
+            #results[dep[0]['id']] = dep[0]['text']
+            #print(results)
+    return results
 
 if __name__ == "__main__":
     doc,s_count = test()
     for i,sent in enumerate(doc.sentences):
        # print (i+1, extract_elements(sent))
-        _,actors = extract_elements(sent)
-        print(qualifyActors(actors))
+        isPass,actors = extract_elements(sent)
+        #print(qualifyActors(actors))
+        determineActions(isPass,sent)
+        #print(rawActions)
     #print(*[f'entity: {ent.text}\ttype: {ent.type}' for sent in doc.sentences for ent in sent.ents], sep='\n')
     
